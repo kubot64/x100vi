@@ -35,6 +35,19 @@ OUT_OF_STOCK_KEYWORDS = (
     "売り切れ",
 )
 
+SCHEMA_IN_STOCK_KEYWORDS = (
+    "instock",
+    "limitedavailability",
+    "onlineonly",
+)
+
+SCHEMA_OUT_OF_STOCK_KEYWORDS = (
+    "outofstock",
+    "discontinued",
+    "preorder",
+    "soldout",
+)
+
 
 @dataclass
 class ProductStatus:
@@ -67,6 +80,15 @@ def normalize_text(value: str) -> str:
 
 
 def detect_stock(text: str) -> bool | None:
+    lower = text.lower()
+
+    for kw in SCHEMA_IN_STOCK_KEYWORDS:
+        if kw in lower:
+            return True
+    for kw in SCHEMA_OUT_OF_STOCK_KEYWORDS:
+        if kw in lower:
+            return False
+
     for kw in IN_STOCK_KEYWORDS:
         if kw in text:
             return True
