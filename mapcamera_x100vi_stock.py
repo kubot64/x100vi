@@ -202,6 +202,7 @@ def summarize(statuses: list[ProductStatus], keyword_label: str) -> int:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="MapCameraでX100VIの在庫状況を確認")
     parser.add_argument("--url", default=DEFAULT_URL, help=f"チェック対象URL (default: {DEFAULT_URL})")
+    parser.add_argument("--html-file", help="ローカルHTMLファイルを読み込んで解析（ネットワーク取得をスキップ）")
     parser.add_argument("--keyword", default="X100VI", help="商品キーワード（正規表現）。default: X100VI")
     parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT, help="HTTPタイムアウト秒")
     parser.add_argument("--window", type=int, default=DEFAULT_WINDOW, help="キーワード前後の抽出文字数")
@@ -212,16 +213,34 @@ def main() -> int:
     args = parse_args()
 
     try:
-        html = fetch_html(args.url, args.timeout)
-    except HTTPError as exc:
-        print(f"HTTPエラー: {exc.code} {exc.reason}", file=sys.stderr)
-        return 3
-    except URLError as exc:
-        print(f"URLエラー: {exc.reason}", file=sys.stderr)
-        return 3
-    except Exception as exc:  # noqa: BLE001
-        print(f"取得エラー: {exc}", file=sys.stderr)
-        return 3
+        re.compile(args.keyword, flags=re.IGNORECASE)
+    except re.error as exc:
+        print(f"キーワード正規表現エラー: {exc}", file=sys.stderr)
+        return 4
+
+    if args.window < 0:
+        print("--window は 0 以上を指定してください", file=sys.stderr)
+        return 4
+
+    if args.html_file:
+        try:
+            with open(args.html_file, "r", encoding="utf-8", errors="replace") as fp:
+                html = fp.read()
+        except OSError as exc:
+            print(f"ローカルHTML読み込みエラー: {exc}", file=sys.stderr)
+            return 3
+    else:
+        try:
+            html = fetch_html(args.url, args.timeout)
+        except HTTPError as exc:
+            print(f"HTTPエラー: {exc.code} {exc.reason}", file=sys.stderr)
+            return 3
+        except URLError as exc:
+            print(f"URLエラー: {exc.reason}", file=sys.stderr)
+            return 3
+        except Exception as exc:  # noqa: BLE001
+            print(f"取得エラー: {exc}", file=sys.stderr)
+            return 3
 
     statuses = build_statuses(html, args.keyword, args.window)
     return summarize(statuses, args.keyword)

@@ -11,6 +11,7 @@ python3 mapcamera_x100vi_stock.py
 ### 主なオプション
 
 - `--url`: チェック対象 URL（デフォルトは `https://www.mapcamera.com/search?keyword=X100VI`）
+- `--html-file`: ローカル保存したHTMLを読み込んで解析（オフライン検証向け）
 - `--keyword`: 商品名キーワード（正規表現、デフォルト `X100VI`）
 - `--timeout`: HTTP タイムアウト秒（デフォルト 20）
 - `--window`: キーワード前後の抽出文字数（デフォルト 180）
@@ -25,6 +26,12 @@ python3 mapcamera_x100vi_stock.py \
   --window 200
 ```
 
+オフライン例（保存済みHTMLを解析）:
+
+```bash
+python3 mapcamera_x100vi_stock.py --html-file ./mapcamera_search.html
+```
+
 ## 判定ルール
 
 - 在庫あり系キーワード: `在庫あり`, `即納`, `当日出荷`, `注文可能` など
@@ -37,7 +44,8 @@ python3 mapcamera_x100vi_stock.py \
 - `0`: 在庫あり表記を検出
 - `1`: 在庫あり表記を検出できず
 - `2`: キーワードを含む商品情報が見つからない
-- `3`: 通信エラーなどで取得失敗
+- `3`: 通信エラーやファイル読み込み失敗
+- `4`: 引数エラー（不正な正規表現や負の `--window`）
 
 ## 注意
 
